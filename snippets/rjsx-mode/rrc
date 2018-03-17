@@ -1,0 +1,17 @@
+# -*- mode: snippet -*- name: React with Redux key:rrc -- import
+# React, { Component } from 'react' import { connect } from
+# 'react-redux'
+
+class $1 extends Component { render() { return (
+
+     ) } }
+
+const mapState = state => ({
+
+})
+
+const mapDispatch = dispatch => ({
+
+})
+
+export default connect(mapState, mapDispatch)($1)

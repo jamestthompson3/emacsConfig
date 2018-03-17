@@ -1,0 +1,13 @@
+# -*- mode: rjsx -*-
+# name: React Class Component
+# key: rcc
+# --
+import React, { Component } from 'react'
+
+class $1 extends Component {
+  render() {
+    return <div />
+  }
+}
+
+export default $1

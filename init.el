@@ -50,16 +50,43 @@
 
 
 ;;---------- Multi cursors -------------
+(require 'evil-multiedit)
 
-(when (require 'multiple-cursors nil 'noerror)
+;; Highlights all matches of the selection in the buffer.
+(define-key evil-visual-state-map "R" 'evil-multiedit-match-all)
 
-  (package-install 'multiple-cursors)
-  )
-(global-set-key (kbd "C-S-c C-S-c") 'mc/edit-lines)
-(global-set-key (kbd "C-D") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-S-f") 'mc/mark-all-like-this)
-;; ------------- End Multi cursors -------------
+;; Match the word under cursor (i.e. make it an edit region). Consecutive presses will
+;; incrementally add the next unmatched match.
+(define-key evil-normal-state-map (kbd "M-d") 'evil-multiedit-match-and-next)
+;; Match selected region.
+(define-key evil-visual-state-map (kbd "M-d") 'evil-multiedit-and-next)
+;; Insert marker at point
+(define-key evil-insert-state-map (kbd "M-d") 'evil-multiedit-toggle-marker-here)
+
+;; Same as M-d but in reverse.
+(define-key evil-normal-state-map (kbd "M-D") 'evil-multiedit-match-and-prev)
+(define-key evil-visual-state-map (kbd "M-D") 'evil-multiedit-and-prev)
+
+;; OPTIONAL: If you prefer to grab symbols rather than words, use
+;; `evil-multiedit-match-symbol-and-next` (or prev).
+
+;; Restore the last group of multiedit regions.
+(define-key evil-visual-state-map (kbd "C-M-D") 'evil-multiedit-restore)
+
+;; RET will toggle the region under the cursor
+(define-key evil-multiedit-state-map (kbd "RET") 'evil-multiedit-toggle-or-restrict-region)
+
+;; ...and in visual mode, RET will disable all fields outside the selected region
+(define-key evil-motion-state-map (kbd "RET") 'evil-multiedit-toggle-or-restrict-region)
+
+;; For moving between edit regions
+(define-key evil-multiedit-state-map (kbd "C-n") 'evil-multiedit-next)
+(define-key evil-multiedit-state-map (kbd "C-p") 'evil-multiedit-prev)
+(define-key evil-multiedit-insert-state-map (kbd "C-n") 'evil-multiedit-next)
+(define-key evil-multiedit-insert-state-map (kbd "C-p") 'evil-multiedit-prev)
+
+;; Ex command that allows you to invoke evil-multiedit with a regular expression, e.g.
+(evil-ex-define-cmd "ie[dit]" 'evil-multiedit-ex-match)
 
 ;; --------   Emmet ----------------------------
 (add-hook 'sgml-mode-hook 'emmet-mode) ;; Auto-start on any markup modes
@@ -70,7 +97,8 @@
 ;; ----------- End Emmet --------------------------------
 
 ;; ------------ JS2 mode -------------------------
-(setq js2-strict-missing-semi nil)
+(setq js2-strict-missing-semi-warning nil)
+(setq js2-missing-semi-one-line-override nil)
 
 
 (when (require 'rjsx nil 'noerror)
@@ -108,7 +136,12 @@
 ;; --------------- EVIL MODE -----------
 
 (require 'evil)
-;;(evil-mode 1)
+(with-eval-after-load 'evil
+  (require 'evil-anzu))
+(global-anzu-mode +1)
+(global-set-key (kbd "C-d") 'anzu-replace-at-cursor-thing)
+(evil-define-key 'insert global-map (kbd "M-f") 'evil-normal-state)
+(evil-mode 1)
 
 ;; ----------- RJSX Mode ----------------
 (add-to-list 'auto-mode-alist '("src\\/.*\\.js\\'" . rjsx-mode))
@@ -231,7 +264,7 @@
  '(next-line-add-newlines nil)
  '(package-selected-packages
    (quote
-    (org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
+    (eldoc-eval all-the-icons-ivy evil-multiedit evil-anzu evil-search-highlight-persist org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
  '(prettier-js-args
    (quote
     ("--trailing-comma" "none" "--parser" "flow" "--semi" "false" "single-quote" "true" "--write")))
@@ -386,20 +419,20 @@ If it's found, then add it to the `exec-path'."
 ;; (define-key tern-mode-keymap (kbd "M-.") nil)
 ;; (define-key tern-mode-keymap (kbd "M-,") nil)
 
-;; (eval-after-load 'web-mode
-;;     '(progn
-;;        (add-hook 'web-mode-hook #'add-node-modules-path)
-;;        (add-hook 'web-mode-hook 'flow-minor-mode)
-;;        (add-hook 'web-mode-hook 'ac-js2-mode)
-;;        ;; (add-hook 'web-mode-hook (lambda ()
-;;        ;;                     (tern-mode)
-;;        ;;                     (company-mode)))
-;;        (add-hook 'web-mode-hook #'prettier-js-mode)))
+(eval-after-load 'web-mode
+    '(progn
+       (add-hook 'web-mode-hook #'add-node-modules-path)
+       ;; (add-hook 'web-mode-hook 'flow-minor-mode)
+       (add-hook 'web-mode-hook 'ac-js2-mode)
+       ;; (add-hook 'web-mode-hook (lambda ()
+       ;;                     (tern-mode)
+       ;;                     (company-mode)))
+       (add-hook 'web-mode-hook #'prettier-js-mode)))
 
 (eval-after-load 'rjsx-mode
     '(progn
        (add-hook 'rjsx-mode-hook #'add-node-modules-path)
-       (add-hook 'rjsx-mode-hook 'flow-minor-mode)
+       ;; (add-hook 'rjsx-mode-hook 'flow-minor-mode)
        (add-hook 'rjsx-mode-hook 'web-mode)
        (add-hook 'rjsx-mode-hook 'js2-mode)
        (add-hook 'rjsx-mode-hook 'ac-js2-mode)
@@ -408,15 +441,15 @@ If it's found, then add it to the `exec-path'."
                            (company-mode)))
        (add-hook 'rjsx-mode-hook #'prettier-js-mode)))
 
-;; (eval-after-load 'js2-mode
-;;     '(progn
-;;        (add-hook 'js2-mode-hook #'add-node-modules-path)
-;;        (add-hook 'js2-mode-hook 'flow-minor-mode)
-;;        ;; (add-hook 'rjsx-mode-hook (lambda ()
-;;        ;;                     (tern-mode)
-;;        ;;                     (company-mode)))
-;;        (add-hook 'js2-mode-hook 'ac-js2-mode)
-;;        (add-hook 'js2-mode-hook #'prettier-js-mode)))
+(eval-after-load 'js2-mode
+    '(progn
+       (add-hook 'js2-mode-hook #'add-node-modules-path)
+       ;; (add-hook 'js2-mode-hook 'flow-minor-mode)
+       ;; (add-hook 'rjsx-mode-hook (lambda ()
+       ;;                     (tern-mode)
+       ;;                     (company-mode)))
+       (add-hook 'js2-mode-hook 'ac-js2-mode)
+       (add-hook 'js2-mode-hook #'prettier-js-mode)))
 
 (eval-after-load "flow-minor-mode"
      '(define-key flow-minor-mode-map (kbd "C-S-f") 'flow-minor-status))
@@ -429,10 +462,10 @@ If it's found, then add it to the `exec-path'."
 (global-set-key (kbd "C-S-g") 'web-mode-element-wrap)
 
 ;--------------{Set Font}--------------;
-;; (setq casey-font "PragmataPro")
-;; ;; Font cosmetic edits
-;; (add-to-list 'default-frame-alist '(font . "PragmataPro"))
-;; (set-face-attribute 'default t :font "PragmataPro")
+(setq casey-font "PragmataPro")
+;; Font cosmetic edits
+(add-to-list 'default-frame-alist '(font . "PragmataPro"))
+(set-face-attribute 'default t :font "PragmataPro")
 (require 'doom-themes)
 
 ;; Global settings (defaults)
@@ -455,13 +488,12 @@ If it's found, then add it to the `exec-path'."
 ;; (set-background-color "#1b1f23")
 ;; ;; (set-face-attribute 'font-lock-builtin-face nil :foreground "#DAB98F")
 ;;  (set-face-attribute 'font-lock-comment-face nil :foreground "#637577")
-;;  (set-face-attribute 'font-lock-constant-face nil :foreground "#01afff")
+ ;; (set-face-attribute 'font-lock-constant-face nil :foreground "#01afff")
 ;;  (set-face-attribute 'font-lock-doc-face nil :foreground "#64a3aa")
 ;; (set-face-attribute 'font-lock-function-name-face nil :foreground "#ac6bdb")
 ;; ;;(set-face-attribute 'font-lock-parameter-face nil :foreground "#dbdb95")
 ;; (set-face-attribute 'font-lock-keyword-face nil :foreground "#f4892b")
 ;; (set-face-attribute 'font-lock-string-face nil :foreground "#23d7d7")
-;; ;; (set-face-attribute 'font-lock-type-face nil :foreground "burlywood3")
 ;;  (set-face-attribute 'font-lock-variable-name-face nil :foreground "#bfbfbf")
 
 

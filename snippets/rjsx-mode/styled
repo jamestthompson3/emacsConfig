@@ -1,0 +1,5 @@
+# -*- mode: rjsx -*-
+# name: styled-components
+# key: styled
+# --
+import styled from 'styled-components'
