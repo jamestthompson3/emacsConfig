@@ -43,6 +43,11 @@
 
 ;; -------------------- End Installing Required Packages ----------------------
 
+;; -------- Org Sync -------------------
+(use-package org-sync)
+(mapc 'load
+      '("org-sync" "org-sync-bb" "org-sync-github" "org-sync-redmine"))
+
 
 ;;---------- Multi cursors -------------
 
@@ -65,22 +70,45 @@
 ;; ----------- End Emmet --------------------------------
 
 ;; ------------ JS2 mode -------------------------
-(setq js2-strict-missing-semi-warning nil)
+(setq js2-strict-missing-semi nil)
+
+
 (when (require 'rjsx nil 'noerror)
   (package-install 'rjsx-mode)
   )
 ;; ---------- End JS2 Mode -----------------
 
-;; ----------- Projectile Mode -------------
+(require 'doom-themes)
+
+;; Global settings (defaults)
+(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+;; may have their own settings.
+(load-theme 'doom-one t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Enable custom neotree theme
+(doom-themes-neotree-config)  ; all-the-icons fonts must be installed!
+
+; ----------- Projectile Mode -------------
 (when (require 'projectile nil 'noerror)
   (package-install 'projectile)
   )
 (projectile-global-mode)
-
+;;(counsel-mode 1)
 ;; ----------- End Projectile Mode -------------
 
 ;; ------- Delete selected text -----------------
 (delete-selection-mode 1)
+
+;; --------------- EVIL MODE -----------
+
+(require 'evil)
+;;(evil-mode 1)
 
 ;; ----------- RJSX Mode ----------------
 (add-to-list 'auto-mode-alist '("src\\/.*\\.js\\'" . rjsx-mode))
@@ -189,6 +217,7 @@
  '(compilation-error-screen-columns nil)
  '(compilation-scroll-output t)
  '(compilation-search-path (quote (nil "src")))
+ '(counsel-mode t)
  '(custom-enabled-themes (quote (misterioso)))
  '(electric-indent-mode nil)
  '(electric-pair-mode t)
@@ -202,7 +231,7 @@
  '(next-line-add-newlines nil)
  '(package-selected-packages
    (quote
-    (react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
+    (org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
  '(prettier-js-args
    (quote
     ("--trailing-comma" "none" "--parser" "flow" "--semi" "false" "single-quote" "true" "--write")))
@@ -249,7 +278,7 @@
   (package-install 'wakatime-mode)
   )
 
-(setq wakatime-api-key "09ce4cf1-376a-4562-bcfa-0d6c9f89ea96")
+(setq wakatime-api-key (getenv "WAKATIME"))
 ;; windows check
 ;;(setq wakatime-cli-path "/opt/conda/bin/wakatime")
    (setq wakatime-cli-path "/usr/local/bin/wakatime")
@@ -340,7 +369,6 @@ If it's found, then add it to the `exec-path'."
 (setq ac-js2-evaluate-calls t)
 (add-hook 'js2-mode-hook 'prettier-js-mode)
 (add-hook 'web-mode-hook 'prettier-js-mode)
-(add-hook 'js2-jsx-mode-hook 'prettier-js-mode)
 (setq prettier-js-args '(
   "--trailing-comma" "none"
   "--parser" "flow"
@@ -352,41 +380,43 @@ If it's found, then add it to the `exec-path'."
 (require 'yasnippet)
 (require 'react-snippets)
 (yas-global-mode 1)
-(add-hook 'after-init-hook 'global-company-mode)
+;;(add-hook 'after-init-hook 'global-company-mode)
 (add-to-list 'company-backends 'company-tern)
 ;; Disable completion keybindings, as we use xref-js2 instead
 ;; (define-key tern-mode-keymap (kbd "M-.") nil)
 ;; (define-key tern-mode-keymap (kbd "M-,") nil)
 
-(eval-after-load 'web-mode
-    '(progn
-       (add-hook 'web-mode-hook #'add-node-modules-path)
-       (add-hook 'web-mode-hook 'flow-minor-mode)
-       (add-hook 'web-mode-hook 'ac-js2-mode)
-       ;; (add-hook 'web-mode-hook (lambda ()
-       ;;                     (tern-mode)
-       ;;                     (company-mode)))
-       (add-hook 'web-mode-hook #'prettier-js-mode)))
+;; (eval-after-load 'web-mode
+;;     '(progn
+;;        (add-hook 'web-mode-hook #'add-node-modules-path)
+;;        (add-hook 'web-mode-hook 'flow-minor-mode)
+;;        (add-hook 'web-mode-hook 'ac-js2-mode)
+;;        ;; (add-hook 'web-mode-hook (lambda ()
+;;        ;;                     (tern-mode)
+;;        ;;                     (company-mode)))
+;;        (add-hook 'web-mode-hook #'prettier-js-mode)))
 
 (eval-after-load 'rjsx-mode
     '(progn
        (add-hook 'rjsx-mode-hook #'add-node-modules-path)
        (add-hook 'rjsx-mode-hook 'flow-minor-mode)
+       (add-hook 'rjsx-mode-hook 'web-mode)
+       (add-hook 'rjsx-mode-hook 'js2-mode)
        (add-hook 'rjsx-mode-hook 'ac-js2-mode)
-       ;; (add-hook 'rjsx-mode-hook (lambda ()
-       ;;                     (tern-mode)
-       ;;                     (company-mode)))
+       (add-hook 'rjsx-mode-hook (lambda ()
+                           (tern-mode)
+                           (company-mode)))
        (add-hook 'rjsx-mode-hook #'prettier-js-mode)))
 
-(eval-after-load 'js2-mode
-    '(progn
-       (add-hook 'js2-mode-hook #'add-node-modules-path)
-       (add-hook 'js2-mode-hook 'flow-minor-mode)
-       ;; (add-hook 'rjsx-mode-hook (lambda ()
-       ;;                     (tern-mode)
-       ;;                     (company-mode)))
-       (add-hook 'js2-mode-hook 'ac-js2-mode)
-       (add-hook 'js2-mode-hook #'prettier-js-mode)))
+;; (eval-after-load 'js2-mode
+;;     '(progn
+;;        (add-hook 'js2-mode-hook #'add-node-modules-path)
+;;        (add-hook 'js2-mode-hook 'flow-minor-mode)
+;;        ;; (add-hook 'rjsx-mode-hook (lambda ()
+;;        ;;                     (tern-mode)
+;;        ;;                     (company-mode)))
+;;        (add-hook 'js2-mode-hook 'ac-js2-mode)
+;;        (add-hook 'js2-mode-hook #'prettier-js-mode)))
 
 (eval-after-load "flow-minor-mode"
      '(define-key flow-minor-mode-map (kbd "C-S-f") 'flow-minor-status))
@@ -403,9 +433,25 @@ If it's found, then add it to the `exec-path'."
 ;; ;; Font cosmetic edits
 ;; (add-to-list 'default-frame-alist '(font . "PragmataPro"))
 ;; (set-face-attribute 'default t :font "PragmataPro")
-(require 'afternoon-theme)
-(load-theme 'afternoon t)
-;; WIP CHANGE FROM VSCODE
+(require 'doom-themes)
+
+;; Global settings (defaults)
+(setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+      doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
+;; may have their own settings.
+(load-theme 'doom-one t)
+
+;; Enable flashing mode-line on errors
+(doom-themes-visual-bell-config)
+
+;; Enable custom neotree theme
+(doom-themes-neotree-config)  ; all-the-icons fonts must be installed!
+
+;; Corrects (and improves) org-mode's native fontification.
+(doom-themes-org-config)
+
 ;; (set-background-color "#1b1f23")
 ;; ;; (set-face-attribute 'font-lock-builtin-face nil :foreground "#DAB98F")
 ;;  (set-face-attribute 'font-lock-comment-face nil :foreground "#637577")
@@ -429,8 +475,8 @@ If it's found, then add it to the `exec-path'."
 
 
 ;; Show all line numbering by default (you can turn this off if you would like)
-(line-number-mode t)
-(linum-mode t)
+;;(global-line-number-mode 1)
+(global-linum-mode 1)
 
 ;; Adjust Spacing
 (setq linum-format "%d  ")
@@ -511,13 +557,16 @@ Version 2017-01-08"
 
 ;: ------------- Auto-complete -------------------
 (require 'auto-complete)
-;;(global-auto-complete-mode)
-;;(ac-set-trigger-key "TAB")
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+(setq ivy-count-format "(%d/%d) ")
+(global-auto-complete-mode)
+(ac-set-trigger-key "TAB")
 ;; Basic .emacs with a good set of defaults, to be used as template for usage
 ;; with OCaml and OPAM
-;;
+;
 ;; Author: Louis Gesbert <louis.gesbert@ocamlpro.com>
-;; Released under CC0
+;; Released under CC
 
 ;; Generic, recommended configuration options
 
