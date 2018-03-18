@@ -252,7 +252,10 @@
  '(compilation-search-path (quote (nil "src")))
  '(counsel-mode t)
  '(custom-enabled-themes (quote (misterioso)))
- '(electric-indent-mode nil)
+ '(custom-safe-themes
+   (quote
+    ("2af26301bded15f5f9111d3a161b6bfb3f4b93ec34ffa95e42815396da9cb560" "0846e3b976425f142137352e87dd6ac1c0a1980bb70f81bfcf4a54177f1ab495" "b5ecb5523d1a1e119dfed036e7921b4ba00ef95ac408b51d0cd1ca74870aeb14" "2a1b4531f353ec68f2afd51b396375ac2547c078d035f51242ba907ad8ca19da" "53d1bb57dadafbdebb5fbd1a57c2d53d2b4db617f3e0e05849e78a4f78df3a1b" "4e21fb654406f11ab2a628c47c1cbe53bab645d32f2c807ee2295436f09103c6" "28ec8ccf6190f6a73812df9bc91df54ce1d6132f18b4c8fcc85d45298569eb53" default)))
+ '(electric-indent-mode t)
  '(electric-pair-mode t)
  '(fci-rule-color "#14151E")
  '(indent-tabs-mode nil)
@@ -264,7 +267,7 @@
  '(next-line-add-newlines nil)
  '(package-selected-packages
    (quote
-    (eldoc-eval all-the-icons-ivy evil-multiedit evil-anzu evil-search-highlight-persist org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
+    (spaceline-all-the-icons eldoc-eval all-the-icons-ivy evil-multiedit evil-anzu evil-search-highlight-persist org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
  '(prettier-js-args
    (quote
     ("--trailing-comma" "none" "--parser" "flow" "--semi" "false" "single-quote" "true" "--write")))
@@ -474,7 +477,7 @@ If it's found, then add it to the `exec-path'."
 
 ;; Load the theme (doom-one, doom-molokai, etc); keep in mind that each theme
 ;; may have their own settings.
-(load-theme 'doom-one t)
+(load-theme 'doom-vibrant t)
 
 ;; Enable flashing mode-line on errors
 (doom-themes-visual-bell-config)
@@ -496,7 +499,12 @@ If it's found, then add it to the `exec-path'."
 ;; (set-face-attribute 'font-lock-string-face nil :foreground "#23d7d7")
 ;;  (set-face-attribute 'font-lock-variable-name-face nil :foreground "#bfbfbf")
 
+; --------- ModeLine ------------------;
+(package-install 'spaceline-all-the-icons)
 
+(use-package spaceline-all-the-icons
+  :after spaceline
+  :config (spaceline-all-the-icons-theme))
 ;------------{NO Scrollbar}------------;
 
 (scroll-bar-mode -1)
