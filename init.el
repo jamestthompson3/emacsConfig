@@ -1,5 +1,5 @@
 ;;; Config  ------ Summary -----------------
-(require 'package)
+(use-package 'package)
 (let* ((no-ssl (and (memq system-type '(windows-nt ms-dos))
                     (not (gnutls-available-p))))
        (proto (if no-ssl "http" "https")))
@@ -9,7 +9,7 @@
   (when (< emacs-major-version 24)
     ;; For important compatibility libraries like cl-lib
     (add-to-list 'package-archives '("gnu" . (concat proto "://elpa.gnu.org/packages/")))))
-(package-initialize)(require 'package)
+(package-initialize)(use-package 'package)
 
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
@@ -50,7 +50,7 @@
 
 
 ;;---------- Multi cursors -------------
-(require 'evil-multiedit)
+(use-package 'evil-multiedit)
 
 ;; Highlights all matches of the selection in the buffer.
 (define-key evil-visual-state-map "R" 'evil-multiedit-match-all)
@@ -101,12 +101,12 @@
 (setq js2-missing-semi-one-line-override nil)
 
 
-(when (require 'rjsx nil 'noerror)
+(when (use-package 'rjsx nil 'noerror)
   (package-install 'rjsx-mode)
   )
 ;; ---------- End JS2 Mode -----------------
 
-(require 'doom-themes)
+(use-package 'doom-themes)
 
 ;; Global settings (defaults)
 (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -123,7 +123,7 @@
 (doom-themes-neotree-config)  ; all-the-icons fonts must be installed!
 
 ; ----------- Projectile Mode -------------
-(when (require 'projectile nil 'noerror)
+(when (use-package 'projectile nil 'noerror)
   (package-install 'projectile)
   )
 (projectile-global-mode)
@@ -135,9 +135,9 @@
 
 ;; --------------- EVIL MODE -----------
 
-(require 'evil)
+(use-package 'evil)
 (with-eval-after-load 'evil
-  (require 'evil-anzu))
+  (use-package 'evil-anzu))
 (global-anzu-mode +1)
 (global-set-key (kbd "C-d") 'anzu-replace-at-cursor-thing)
 (evil-define-key 'insert global-map (kbd "M-f") 'evil-normal-state)
@@ -150,7 +150,7 @@
 (global-auto-revert-mode t)
 
 ;; ------------  Tree on sidebar -------------
-(when (require 'neotree  nil 'noerror)
+(when (use-package 'neotree  nil 'noerror)
   (package-install 'neotree)
   )
   (global-set-key [f8] 'neotree-toggle)
@@ -175,7 +175,7 @@
 (add-to-list 'auto-mode-alist '("\\.jsx$" . web-mode))
 
 ;; http://www.flycheck.org/manual/latest/index.html
-(when (require 'flycheck  nil 'noerror)
+(when (use-package 'flycheck  nil 'noerror)
   (package-install 'flycheck)
   )
 (global-flycheck-mode)
@@ -267,14 +267,14 @@
  '(next-line-add-newlines nil)
  '(package-selected-packages
    (quote
-    (spaceline-all-the-icons eldoc-eval all-the-icons-ivy evil-multiedit evil-anzu evil-search-highlight-persist org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
+    (web-mode spaceline-all-the-icons eldoc-eval all-the-icons-ivy evil-multiedit evil-anzu evil-search-highlight-persist org-sync doom-themes evil ivy react-snippets ## yasnippet company-tern company tern tern-auto-complete ac-js2 auto-complete afternoon-theme flow-minor-mode diminish prettier-js flycheck multiple-cursors wakatime-mode dumb-jump projectile rjsx-mode)))
  '(prettier-js-args
    (quote
     ("--trailing-comma" "none" "--parser" "flow" "--semi" "false" "single-quote" "true" "--write")))
  '(projectile-globally-ignored-directories
    (quote
     (".idea" ".ensime_cache" ".eunit" ".git" ".hg" ".fslckout" "_FOSSIL_" ".bzr" "_darcs" ".tox" ".svn" ".stack-work" "node_modules" "lib")))
- '(require-final-newline t)
+ '(use-package-final-newline t)
  '(sentence-end-double-space nil)
  '(show-paren-mode t)
  '(show-trailing-whitespace t)
@@ -310,7 +310,7 @@
  )
 
 ;; ------------- Wakatime Mode -----------------
-(when (require 'wakatime nil 'noerror)
+(when (use-package 'wakatime nil 'noerror)
   (package-install 'wakatime-mode)
   )
 
@@ -323,14 +323,14 @@
 ;; --------- End Wakatime Mode ---------------------
 
 ;; ------------------- Flow ----------------------------
-(when (require 'flow-minor-mode nil 'noerror)
+(when (use-package 'flow-minor-mode nil 'noerror)
   (package-install 'flow-minor-mode)
   )
 
 ;; ---------------- End Flow -------------------------
 
 ;; -------- Prettier-JS ----------------------------
-(when (require 'prettier-js  nil 'noerror)
+(when (use-package 'prettier-js  nil 'noerror)
   (package-install 'prettier-js)
   )
 ;;; add-node-modules-path.el --- Add node_modules to your exec-path
@@ -393,28 +393,45 @@ If it's found, then add it to the `exec-path'."
 
 ;;; add-node-modules-path.el ends here
 
+;;; check for flow config
+
+;;;###autoload
+(defun check-for-flow-config ()
+  "Search the current buffer's parent directories for `node_modules/.bin`.
+If it's found, then add it to the `exec-path'."
+  (interactive)
+  (let* ((root (locate-dominating-file
+                (or (buffer-file-name) default-directory)
+                ".flowconfig"))
+         (path (and root
+                    (flow-config root))))
+    (if flow-config
+        (progn
+          (add-to-list 'auto-mode-alist '("src\\/.*\\.js\\'" . flow-minor-mode))))))
+
+;; ---------------- end flow check -------------------------------
 
 ;;; -------------- JS MODE CONFIG --------------
-(require 'ac-js2)
-;; (require 'tern)
-;; (require 'tern-auto-complete)
+(use-package 'ac-js2)
+;; (use-package 'tern)
+;; (use-package 'tern-auto-complete)
 ;; (eval-after-load 'tern
 ;;    '(progn
-;;       (require 'tern-auto-complete)
+;;       (use-package 'tern-auto-complete)
 ;;       (tern-ac-setup)))
 (setq ac-js2-evaluate-calls t)
-(add-hook 'js2-mode-hook 'prettier-js-mode)
-(add-hook 'web-mode-hook 'prettier-js-mode)
+(add-hook 'rjsx-mode-hook 'web-mode)
+(add-hook 'rjsx-mode-hook 'js2-mode)
 (setq prettier-js-args '(
   "--trailing-comma" "none"
   "--parser" "flow"
   "--semi" "false"
   "single-quote" "true"
   ))
-(require 'company)
-(require 'company-tern)
-(require 'yasnippet)
-(require 'react-snippets)
+(use-package 'company)
+(use-package 'company-tern)
+(use-package 'yasnippet)
+(use-package 'react-snippets)
 (yas-global-mode 1)
 ;;(add-hook 'after-init-hook 'global-company-mode)
 (add-to-list 'company-backends 'company-tern)
@@ -422,20 +439,11 @@ If it's found, then add it to the `exec-path'."
 ;; (define-key tern-mode-keymap (kbd "M-.") nil)
 ;; (define-key tern-mode-keymap (kbd "M-,") nil)
 
-(eval-after-load 'web-mode
-    '(progn
-       (add-hook 'web-mode-hook #'add-node-modules-path)
-       ;; (add-hook 'web-mode-hook 'flow-minor-mode)
-       (add-hook 'web-mode-hook 'ac-js2-mode)
-       ;; (add-hook 'web-mode-hook (lambda ()
-       ;;                     (tern-mode)
-       ;;                     (company-mode)))
-       (add-hook 'web-mode-hook #'prettier-js-mode)))
 
 (eval-after-load 'rjsx-mode
     '(progn
        (add-hook 'rjsx-mode-hook #'add-node-modules-path)
-       ;; (add-hook 'rjsx-mode-hook 'flow-minor-mode)
+       ;; radd-hook 'rjsx-mode-hook 'flow-minor-mode)
        (add-hook 'rjsx-mode-hook 'web-mode)
        (add-hook 'rjsx-mode-hook 'js2-mode)
        (add-hook 'rjsx-mode-hook 'ac-js2-mode)
@@ -444,15 +452,6 @@ If it's found, then add it to the `exec-path'."
                            (company-mode)))
        (add-hook 'rjsx-mode-hook #'prettier-js-mode)))
 
-(eval-after-load 'js2-mode
-    '(progn
-       (add-hook 'js2-mode-hook #'add-node-modules-path)
-       ;; (add-hook 'js2-mode-hook 'flow-minor-mode)
-       ;; (add-hook 'rjsx-mode-hook (lambda ()
-       ;;                     (tern-mode)
-       ;;                     (company-mode)))
-       (add-hook 'js2-mode-hook 'ac-js2-mode)
-       (add-hook 'js2-mode-hook #'prettier-js-mode)))
 
 (eval-after-load "flow-minor-mode"
      '(define-key flow-minor-mode-map (kbd "C-S-f") 'flow-minor-status))
@@ -469,7 +468,7 @@ If it's found, then add it to the `exec-path'."
 ;; Font cosmetic edits
 (add-to-list 'default-frame-alist '(font . "PragmataPro"))
 (set-face-attribute 'default t :font "PragmataPro")
-(require 'doom-themes)
+(use-package 'doom-themes)
 
 ;; Global settings (defaults)
 (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
@@ -596,7 +595,7 @@ Version 2017-01-08"
         ))))
 
 ;: ------------- Auto-complete -------------------
-(require 'auto-complete)
+(use-package 'auto-complete)
 (ivy-mode 1)
 (setq ivy-use-virtual-buffers t)
 (setq ivy-count-format "(%d/%d) ")
@@ -613,7 +612,7 @@ Version 2017-01-08"
 
 
 ;; ANSI color in compilation buffer
-(require 'ansi-color)
+(use-package 'ansi-color)
 (defun colorize-compilation-buffer ()
   (toggle-read-only)
   (ansi-color-apply-on-region (point-min) (point-max))
@@ -640,7 +639,7 @@ Version 2017-01-08"
 (add-hook 'caml-mode-hook 'set-ocaml-error-regexp)
 
 ;; ## added by OPAM user-setup for emacs / base ## 56ab50dc8996d2bb95e7856a6eddb17b ## you can edit, but keep this line
-;;(require 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
+;;(use-package 'opam-user-setup "~/.emacs.d/opam-user-setup.el")
 ;; ## end of OPAM user-setup addition for emacs / base ## keep this line
 
 ;;; .emacs ends here
